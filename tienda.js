@@ -38,7 +38,7 @@ function convertirAThumbnail(url) {
     
     // 2. Si es una foto antigua del servidor local
     if (!url.startsWith("http") && !url.startsWith("data:")) {
-        return "${API_BASE_URL_CLIENTE}/uploads/categorias/" + url;
+        return `${API_BASE_URL_CLIENTE}/uploads/categorias/${url}`;
     }
     
     return url;
