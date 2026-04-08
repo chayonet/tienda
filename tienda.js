@@ -38,7 +38,7 @@ function convertirAThumbnail(url) {
     
     // 2. Si es una foto antigua del servidor local
     if (!url.startsWith("http") && !url.startsWith("data:")) {
-        return "https://api-ventas-zzd6.onrender.com/uploads/categorias/" + url;
+        return "https://apis-yley.onrender.com/uploads/categorias/" + url;
     }
     
     return url;
