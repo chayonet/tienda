@@ -435,7 +435,8 @@
               }
 
               // 2. Si no hay caché o ya pasó 1 hora, hacemos el llamado al servidor
-              const response = await fetch("${API_BASE_URL_CLIENTE}/dw_api.php", {
+              // 🔥 CORRECCIÓN AQUÍ: Comillas invertidas (backticks)
+              const response = await fetch(`${API_BASE_URL_CLIENTE}/dw_api.php`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                   body: 'accion=getConfiguracion'
@@ -451,7 +452,8 @@
                       if (urlLogo.includes("uc?export=view&id=")) {
                           urlLogo = urlLogo.replace("uc?export=view&id=", "thumbnail?id=") + "&sz=w400";
                       } else if (!urlLogo.startsWith("http") && !urlLogo.startsWith("data:")) {
-                          urlLogo = "${API_BASE_URL_CLIENTE}/dw_api.php/" + urlLogo;
+                          // 🔥 CORRECCIÓN AQUÍ: Concatenación clásica
+                          urlLogo = API_BASE_URL_CLIENTE + "/uploads/categorias/" + urlLogo;
                       }
                   }
 
@@ -460,7 +462,8 @@
                       if (urlBanner.includes("uc?export=view&id=")) {
                           urlBanner = urlBanner.replace("uc?export=view&id=", "thumbnail?id=") + "&sz=w1200";
                       } else if (!urlBanner.startsWith("http") && !urlBanner.startsWith("data:")) {
-                          urlBanner = "${API_BASE_URL_CLIENTE}/uploads/categorias/" + urlBanner;
+                          // 🔥 CORRECCIÓN AQUÍ: Concatenación clásica
+                          urlBanner = API_BASE_URL_CLIENTE + "/uploads/categorias/" + urlBanner;
                       }
                   }
 
