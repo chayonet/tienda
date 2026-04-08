@@ -1,6 +1,5 @@
 /* =================================================================================
    ARCHIVO: ranking.js (LADO CLIENTE)
-   MÓDULO DE CLASIFICACIÓN - DIGITAL WORLD
    Lógica: Obtención de líderes y caché inteligente (Reinicio a las 12:00 AM Local)
 ================================================================================= */
 
