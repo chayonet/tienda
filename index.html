@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>CHAYONET</title>
+  <title>Cargando...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -80,7 +80,7 @@
 
     <aside class="sidebar" id="sidebar">
       <div class="logo">
-        <img src="uploads/categorias/logo.png" alt="Logo CHAYONET" class="logo-img" id="site-logo">
+        <img src="uploads/categorias/logo.png" alt="Logo" class="logo-img" id="site-logo">
       </div>
 
       <div style="padding: 0 10px;">
@@ -405,6 +405,19 @@
   <script src="config_cliente.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', async () => {
+          
+          // =======================================================================
+          // INYECCIÓN DE MARCA BLANCA (TÍTULO Y LOGO)
+          // =======================================================================
+          if (typeof NOMBRE_NEGOCIO !== 'undefined') {
+              document.title = NOMBRE_NEGOCIO;
+              const logoMain = document.getElementById('site-logo');
+              if (logoMain) {
+                  logoMain.alt = `Logo ${NOMBRE_NEGOCIO}`;
+              }
+          }
+          // =======================================================================
+
           const CACHE_KEY = 'dw_branding_cache';
           const TIEMPO_EXPIRACION = 60 * 60 * 1000; // 1 Hora en milisegundos
 
@@ -435,7 +448,6 @@
               }
 
               // 2. Si no hay caché o ya pasó 1 hora, hacemos el llamado al servidor
-              // 🔥 CORRECCIÓN AQUÍ: Comillas invertidas (backticks)
               const response = await fetch(`${API_BASE_URL_CLIENTE}/dw_api.php`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -452,7 +464,6 @@
                       if (urlLogo.includes("uc?export=view&id=")) {
                           urlLogo = urlLogo.replace("uc?export=view&id=", "thumbnail?id=") + "&sz=w400";
                       } else if (!urlLogo.startsWith("http") && !urlLogo.startsWith("data:")) {
-                          // 🔥 CORRECCIÓN AQUÍ: Concatenación clásica
                           urlLogo = API_BASE_URL_CLIENTE + "/uploads/categorias/" + urlLogo;
                       }
                   }
@@ -462,7 +473,6 @@
                       if (urlBanner.includes("uc?export=view&id=")) {
                           urlBanner = urlBanner.replace("uc?export=view&id=", "thumbnail?id=") + "&sz=w1200";
                       } else if (!urlBanner.startsWith("http") && !urlBanner.startsWith("data:")) {
-                          // 🔥 CORRECCIÓN AQUÍ: Concatenación clásica
                           urlBanner = API_BASE_URL_CLIENTE + "/uploads/categorias/" + urlBanner;
                       }
                   }
