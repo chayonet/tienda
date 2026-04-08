@@ -15,7 +15,7 @@ let selectedAmount = null;
 const WSP_ICON_ID = "12_hw1hRhhGNGv1UY7CX-YJajITFtrY-S";
 const WSP_ICON_URL = `https://drive.google.com/thumbnail?id=${WSP_ICON_ID}&sz=w200`;
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxhAV1ENgIDgKB770bkaKSIeTpwGkqgZmSFADGih-Reu0Ho-EPpeddKji1KqDS1xNPIkQ/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbx3oU1jG8REbwbG4DYOZ9iQBhNlbYTvvOmipiU5kGDHg6DLI7_pZEnE1CkBtW2ICW6RNg/exec";
 const API_CLIENTE_URL = `${API_BASE_URL_CLIENTE}/dw_api.php`;
 
 /**
