@@ -1,6 +1,5 @@
 /* =================================================================================
    ARCHIVO: mistickets.js
-   MÓDULO DE GESTIÓN DE USUARIOS - DIGITAL WORLD 
    Lógica: Renderizado de Tickets, Buscador en Tiempo Real, Modal de Detalles.
    (ACTUALIZADO: BUSCADOR PREMIUM INTEGRADO)
 ================================================================================= */
