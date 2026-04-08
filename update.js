@@ -1,7 +1,6 @@
 /* =================================================================================
-   ARCHIVO: update.js
-   LOG: Control de versiones y estilos del Badge flotante.
-   NOTA: Se mantiene solo la versión de lanzamiento más reciente.
+   ARCHIVO: update.js - LANZAMIENTO OFICIAL
+   LOG: Solo información comercial y de funciones para el cliente.
 ================================================================================= */
 
 const historicoVersiones = [
@@ -10,10 +9,11 @@ const historicoVersiones = [
         fecha: "08/04/2026",
         tipo: "Gran Lanzamiento",
         cambios: [
-            "Arquitectura Global Optimizada: Implementación de variables maestras para una conexión 100% estable.",
-            "Base de Datos 0 Kilómetros: Limpieza total de registros de prueba y optimización de tablas SQL.",
-            "Blindaje de Enlaces: Mejora en el motor de carga de imágenes y rutas del servidor.",
-            "Sincronización Inteligente: El sistema ahora detecta cambios en la configuración en tiempo real."
+            "¡Bienvenidos a CHAYONET!: Hoy abrimos oficialmente las puertas de nuestra nueva plataforma diseñada para tu entretenimiento.",
+            "Experiencia Ultra-Premium: Disfruta de una interfaz moderna, rápida y elegante, optimizada para que encuentres tus servicios favoritos al instante.",
+            "Tienda Automática 24/7: Ahora puedes realizar tus pedidos y gestionar tus cuentas en cualquier momento del día, sin esperas.",
+            "Seguridad Reforzada: Hemos blindado tu acceso y tus datos para que tu única preocupación sea qué película ver hoy.",
+            "Navegación Fluida: El sistema ha sido ajustado para consumir menos datos y cargar las imágenes de tus servicios a máxima velocidad."
         ]
     }
 ];
@@ -25,7 +25,6 @@ function abrirModalUpdates() {
     
     if (!overlay || !modal || !timeline) return;
 
-    // Renderizar la línea de tiempo dinámica
     timeline.innerHTML = historicoVersiones.map((v, index) => {
         let isLatest = index === 0;
         let dotColor = isLatest ? "var(--success)" : "var(--accent)";
@@ -33,7 +32,7 @@ function abrirModalUpdates() {
             ? "background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);" 
             : "background: var(--accent-glow); color: var(--accent-text); border: 1px solid var(--accent);";
         
-        let listHTML = v.cambios.map(c => `<li><span class="material-icons-round">chevron_right</span> ${c}</li>`).join('');
+        let listHTML = v.cambios.map(c => `<li><span class="material-icons-round">star</span> ${c}</li>`).join('');
 
         return `
             <div class="timeline-item">
@@ -63,132 +62,45 @@ function cerrarModalUpdates() {
 }
 
 // ===============================================================
-// INYECCIÓN DE ESTILOS DEL MODAL Y EL BADGE (Adaptable Light/Dark)
+// INYECCIÓN DE ESTILOS DEL MODAL Y EL BADGE (Se mantienen intactos)
 // ===============================================================
 const updateStyles = `
-    /* BADGE FLOTANTE */
     .version-badge {
-        position: fixed; 
-        top: 25px;
-        right: 30px;
-        background: var(--bg-card);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--border-color);
-        padding: 10px 22px;
-        border-radius: 50px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        z-index: 5000;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        user-select: none;
+        position: fixed; top: 25px; right: 30px;
+        background: var(--bg-card); backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color); padding: 10px 22px;
+        border-radius: 50px; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; cursor: pointer;
+        z-index: 5000; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); user-select: none;
     }
-    body.dark-mode .version-badge {
-        background: #121214;
-        border: 1px solid #27272a;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-    }
-    .version-badge:hover {
-        border-color: var(--accent);
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px var(--accent-glow);
-    }
-    .v-num {
-        color: var(--text-white);
-        font-family: 'Righteous', cursive;
-        font-size: 1.2rem;
-        letter-spacing: 2px;
-        line-height: 1.2;
-    }
-    .v-date {
-        color: var(--text-gray);
-        font-size: 0.65rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-weight: 700;
-        line-height: 1;
-        margin-top: 4px;
-    }
-
-    @media (max-width: 768px) {
-        .version-badge { top: 15px; right: 15px; padding: 8px 16px; }
-    }
-
-    /* MODAL DE ACTUALIZACIONES */
+    body.dark-mode .version-badge { background: #121214; border: 1px solid #27272a; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+    .version-badge:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 25px var(--accent-glow); }
+    .v-num { color: var(--text-white); font-family: 'Righteous', cursive; font-size: 1.2rem; letter-spacing: 2px; line-height: 1.2; }
+    .v-date { color: var(--text-gray); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; line-height: 1; margin-top: 4px; }
+    @media (max-width: 768px) { .version-badge { top: 15px; right: 15px; padding: 8px 16px; } }
     .update-modal {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0.9);
-        width: 90%;
-        max-width: 600px;
-        background: var(--bg-dark);
-        border: 1px solid var(--border-color);
-        border-radius: 20px;
-        z-index: 11000;
-        box-shadow: 0 25px 50px rgba(0,0,0,0.2);
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        flex-direction: column;
-        max-height: 85vh;
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+        width: 90%; max-width: 600px; background: var(--bg-dark); border: 1px solid var(--border-color);
+        border-radius: 20px; z-index: 11000; opacity: 0; pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; max-height: 85vh;
     }
-    body.dark-mode .update-modal {
-        box-shadow: 0 25px 50px rgba(0,0,0,0.9), 0 0 30px var(--accent-glow);
-    }
-    .update-modal.active {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translate(-50%, -50%) scale(1);
-    }
-    .update-header {
-        background: var(--bg-card);
-        padding: 20px 25px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid var(--border-color);
-        border-radius: 20px 20px 0 0;
-    }
+    body.dark-mode .update-modal { box-shadow: 0 25px 50px rgba(0,0,0,0.9), 0 0 30px var(--accent-glow); }
+    .update-modal.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+    .update-header { background: var(--bg-card); padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); border-radius: 20px 20px 0 0; }
     .update-header-title { display: flex; align-items: center; gap: 12px; color: var(--text-white); }
     .update-header-title span { color: var(--accent); font-size: 1.6rem; }
     .update-header-title h2 { font-size: 1.1rem; margin: 0; font-weight: 800; letter-spacing: 1px; color: var(--text-white); }
-    
-    .btn-close-update {
-        background: transparent;
-        border: 1px solid var(--border-color);
-        color: var(--text-gray);
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: 0.3s;
-    }
+    .btn-close-update { background: transparent; border: 1px solid var(--border-color); color: var(--text-gray); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
     .btn-close-update:hover { background: var(--danger); color: #fff; border-color: var(--danger); transform: scale(1.1); }
-    
     .update-body { padding: 30px 25px; overflow-y: auto; }
-    .update-body::-webkit-scrollbar { width: 6px; }
-    .update-body::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
-
-    /* TIMELINE */
     .timeline-item { position: relative; padding-left: 30px; margin-bottom: 30px; border-left: 2px solid var(--border-color); }
-    .timeline-item:last-child { margin-bottom: 0; border-left-color: transparent; }
     .timeline-dot { position: absolute; left: -6px; top: 0; width: 10px; height: 10px; border-radius: 50%; }
     .timeline-content { background: var(--bg-card); border: 1px solid var(--border-color); padding: 15px 20px; border-radius: 12px; top: -15px; position: relative; }
-    .timeline-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
-    .timeline-header h3 { margin: 0; color: var(--text-white); font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
-    .version-badge-tag { font-size: 0.6rem; padding: 4px 8px; border-radius: 20px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
-    .timeline-date { color: var(--text-gray); font-size: 0.75rem; font-family: monospace; font-weight: 600; }
+    .timeline-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .version-badge-tag { font-size: 0.6rem; padding: 4px 8px; border-radius: 20px; text-transform: uppercase; font-weight: 800; }
     .timeline-list { list-style: none; padding: 0; margin: 0; }
-    .timeline-list li { color: var(--text-gray); font-size: 0.85rem; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 5px; line-height: 1.5; }
-    body.dark-mode .timeline-list li { color: #aaa; }
+    .timeline-list li { color: var(--text-gray); font-size: 0.85rem; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.4; }
     .timeline-list li .material-icons-round { font-size: 1.1rem; color: var(--accent); }
 `;
 
@@ -197,7 +109,7 @@ styleSheetUpdate.innerText = updateStyles;
 document.head.appendChild(styleSheetUpdate);
 
 // ===============================================================
-// INYECTAR LÓGICA DEL BOTÓN Y MANEJO DE PESTAÑAS
+// LÓGICA DE INICIALIZACIÓN
 // ===============================================================
 document.addEventListener("DOMContentLoaded", () => {
     const ultimaVersion = historicoVersiones[0];
@@ -206,10 +118,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (badge) {
         const numEl = document.getElementById("badge-v-num");
         const dateEl = document.getElementById("badge-v-date");
-        
         if (numEl) numEl.innerText = ultimaVersion.version;
-        if (dateEl) dateEl.innerText = `ÚLTIMA ACT. ${ultimaVersion.fecha}`;
-
+        if (dateEl) dateEl.innerText = `LANZAMIENTO: ${ultimaVersion.fecha}`;
         document.body.appendChild(badge);
         badge.style.display = 'none';
 
@@ -224,10 +134,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         });
-
-        const sidebarMenu = document.querySelector('.sidebar');
-        if (sidebarMenu && sidebarMenu.style.display !== 'none') {
-             badge.style.display = 'flex';
-        }
+        
+        // Mostrar si ya estamos dentro de una sección válida
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar && sidebar.style.display !== 'none') badge.style.display = 'flex';
     }
 });
