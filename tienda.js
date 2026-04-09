@@ -47,7 +47,7 @@ function convertirAThumbnail(url) {
 /**
  * 1. CARGA INICIAL Y SINCRONIZACIÓN MIXTA (STALE-WHILE-REVALIDATE)
  */
-async function cargarTienda() {
+async function cargarTienda(silencioso = false) {
     const container = document.getElementById('shop-container');
     if(!container) return;
     
@@ -69,16 +69,18 @@ async function cargarTienda() {
                 cachedProducts = data.productos;
             }
             
-            // Mostramos lo que tenemos al instante para que el cliente no vea spinners
-            window.userBalance = Number(localStorage.getItem('dw_saldo')) || 0;
-            if (typeof updateBalanceUI === 'function') updateBalanceUI();
-            renderizarTiendaPremium(data.productos, false); 
+            // Mostramos lo que tenemos al instante para que el cliente no vea spinners (si no es carga silenciosa)
+            if (!silencioso) {
+                window.userBalance = Number(localStorage.getItem('dw_saldo')) || 0;
+                if (typeof updateBalanceUI === 'function') updateBalanceUI();
+                renderizarTiendaPremium(data.productos, false); 
+            }
         } catch(e) {
             console.warn("Caché corrupto, ignorando.");
-            container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><div class="spinner"></div></div>';
+            if (!silencioso) container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><div class="spinner"></div></div>';
         }
     } else {
-        container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><div class="spinner"></div></div>';
+        if (!silencioso) container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px;"><div class="spinner"></div></div>';
     }
 
     // B. ACTUALIZACIÓN SILENCIOSA (DATOS DINÁMICOS: PRECIOS Y STOCK SIEMPRE FRESCOS)
@@ -151,7 +153,9 @@ function renderizarTiendaPremium(productosDB, isCache) {
     const container = document.getElementById('shop-container');
     if(!container) return;
     
-    container.innerHTML = "";
+    // En lugar de borrar todo de golpe, creamos un contenedor temporal
+    const tempContainer = document.createElement('div');
+    tempContainer.style.display = 'contents';
 
     if (!productosDB || productosDB.length === 0) {
         container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#444; padding:50px;'>Catálogo vacío actualmente.</p>";
@@ -179,7 +183,7 @@ function renderizarTiendaPremium(productosDB, isCache) {
         <button class="store-tab ${currentStoreTab === 'pantallas' ? 'active' : ''}" onclick="switchStoreTab('pantallas')"><i class="material-icons-round" style="font-size:1.1rem;">devices</i> Por Pantallas</button>
         <button class="store-tab ${currentStoreTab === 'completas' ? 'active' : ''}" onclick="switchStoreTab('completas')"><i class="material-icons-round" style="font-size:1.1rem;">tv</i> Cuentas Completas</button>
     `;
-    container.appendChild(tabContainer);
+    tempContainer.appendChild(tabContainer);
 
     // --- B. SEPARAR EN CATEGORÍAS (Cuentas completas vs Pantallas) ---
     const cuentasCompletas = [];
@@ -230,7 +234,7 @@ function renderizarTiendaPremium(productosDB, isCache) {
 
         if (grupo.length === 0) {
             gridContainer.innerHTML = `<p style='grid-column: 1/-1; text-align:center; color:var(--text-gray); padding: 30px; width: 100%;'>No hay ${titulo.toLowerCase()} disponibles en este momento.</p>`;
-            container.appendChild(gridContainer);
+            tempContainer.appendChild(gridContainer);
             return;
         }
 
@@ -372,7 +376,7 @@ function renderizarTiendaPremium(productosDB, isCache) {
             gridContainer.appendChild(card);
         });
         
-        container.appendChild(gridContainer);
+        tempContainer.appendChild(gridContainer);
     };
 
     // Solo renderizamos la pestaña que el usuario haya seleccionado
@@ -381,6 +385,9 @@ function renderizarTiendaPremium(productosDB, isCache) {
     } else {
         renderGrupo(cuentasPantallas, "Cuentas por Pantallas");
     }
+
+    // Reemplazamos el contenido de una sola vez para evitar parpadeos
+    container.innerHTML = tempContainer.innerHTML;
 }
 
 /**
@@ -645,10 +652,17 @@ function generarOrderId() {
 }
 
 window.finalizePurchase = async function() {
+    // Evitamos doble clic accidental
+    const payBtn = document.querySelector('.btn-final-pay');
+    if (payBtn) payBtn.disabled = true;
+
     if(typeof userBalance === 'undefined') userBalance = Number(localStorage.getItem('dw_saldo')) || 0;
     
     let total = cart.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
-    if(userBalance < total) return Toast.fire({ icon: 'error', title: 'Saldo insuficiente' });
+    if(userBalance < total) {
+        if (payBtn) payBtn.disabled = false;
+        return Toast.fire({ icon: 'error', title: 'Saldo insuficiente' });
+    }
 
     closeCheckout();
 
@@ -656,7 +670,7 @@ window.finalizePurchase = async function() {
     const t = localStorage.getItem('dw_token');
     const orderId = generarOrderId();
     
-    // 🔥 PANTALLA DE CARGA PREMIUM DURANTE EL CHECKOUT
+    // 🔥 PANTALLA DE CARGA PREMIUM DURANTE EL CHECKOUT (Bloqueada para no cerrar con clic afuera)
     const isDark = document.body.classList.contains('dark-mode');
     Swal.fire({ 
         title: '<span style="color:var(--text-main); font-family:\'Righteous\', cursive; letter-spacing:1px;">PROCESANDO PEDIDO</span>', 
@@ -700,7 +714,7 @@ window.finalizePurchase = async function() {
                     userBalance = res.nuevoSaldo; 
                     localStorage.setItem('dw_saldo', userBalance);
 
-                    // 🔥 WEBHOOK SILENCIOSO A GOOGLE SHEETS (Formulario Web Anti-Bloqueos)
+                    // 🔥 WEBHOOK SILENCIOSO A GOOGLE SHEETS
                     try {
                         let diasExtraidos = 30;
                         const matchDias = item.nombre.match(/(\d+)\s*(dias|meses|días|mes)/i);
@@ -710,7 +724,6 @@ window.finalizePurchase = async function() {
                                             : parseInt(matchDias[1]);
                         }
                         
-                        // Empacamos los datos como un formulario nativo
                         const params = new URLSearchParams();
                         params.append('accion', 'nueva_compra');
                         params.append('cuenta', res.datos.cuenta);
@@ -718,13 +731,13 @@ window.finalizePurchase = async function() {
                         params.append('dias', diasExtraidos);
                         params.append('servicio', item.nombre);
 
-                        fetch(WEBHOOK_GS_COMPRAS, {
+                        await fetch(WEBHOOK_GS_COMPRAS, {
                             method: 'POST',
                             mode: 'no-cors', 
                             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                             body: params
-                        }).catch(()=>{}); // Silenciado
-                    } catch(e) {}
+                        });
+                    } catch(e) { console.error("Error Webhook:", e); }
                     
                 } else { 
                     errores.push(`${item.nombre}: ${res.msg}`); 
@@ -741,38 +754,28 @@ window.finalizePurchase = async function() {
         cart = []; 
         updateCartUI();
         
-        // 🔥 IMPORTANTE: Borramos el caché local para que en la recarga se actualice el stock al instante
+        // 🔥 FIX: Actualiza la tienda EN SEGUNDO PLANO (Silenciosamente) para que no parpadee a negro
         localStorage.removeItem(STORE_CACHE_KEY);
-        cargarTienda(); 
+        await cargarTienda(true); 
         
+        // Cierra el Swal original manualmente
+        Swal.close();
+
+        // 🔥 Y ahora, pasamos directo a abrir la factura
         if (errores.length > 0) {
-             Swal.fire({
-                title: '<span style="color:var(--text-main); font-family:\'Righteous\', cursive;">COMPRA PARCIAL</span>',
-                text: `Se activaron ${exitos} servicios. Fallaron: ${errores.length}. Generando recibo...`,
-                icon: 'warning',
-                background: isDark ? 'var(--bg-card)' : '#ffffff', 
-                color: isDark ? '#ffffff' : 'var(--text-main)',
-                confirmButtonColor: 'var(--accent)',
-                customClass: { container: 'swal-top-layer', popup: 'premium-modal-radius' }
-            }).then(() => {
-                if (typeof abrirFacturaGlobal === 'function') abrirFacturaGlobal(orderId);
-            });
+            // Notificamos si hubo parciales
+            Toast.fire({ icon: 'warning', title: `Se activaron ${exitos}. Fallaron ${errores.length}` });
+            if (payBtn) payBtn.disabled = false;
+            if (typeof abrirFacturaGlobal === 'function') abrirFacturaGlobal(orderId);
         } else {
-            Swal.fire({
-                icon: 'success',
-                title: '<span style="color:var(--success); font-family:\'Righteous\', cursive;">¡PAGO REALIZADO!</span>',
-                text: `Se activaron ${exitos} servicios. Generando recibo...`,
-                background: isDark ? 'var(--bg-card)' : '#ffffff', 
-                color: isDark ? '#ffffff' : 'var(--text-main)',
-                confirmButtonColor: 'var(--accent)',
-                timer: 2000,
-                showConfirmButton: false,
-                customClass: { container: 'swal-top-layer', popup: 'premium-modal-radius' }
-            }).then(() => {
-                if (typeof abrirFacturaGlobal === 'function') abrirFacturaGlobal(orderId);
-            });
+            // Notificamos éxito y abrimos factura de una vez
+            Toast.fire({ icon: 'success', title: '¡Compra exitosa!' });
+            if (payBtn) payBtn.disabled = false;
+            if (typeof abrirFacturaGlobal === 'function') abrirFacturaGlobal(orderId);
         }
+
     } else {
+        if (payBtn) payBtn.disabled = false;
         Swal.fire({ 
             icon: 'error', 
             title: '<span style="color:var(--danger); font-family:\'Righteous\', cursive;">TRANSACCIÓN FALLIDA</span>', 
@@ -780,6 +783,7 @@ window.finalizePurchase = async function() {
             background: isDark ? 'var(--bg-card)' : '#ffffff', 
             color: isDark ? '#ffffff' : 'var(--text-main)',
             confirmButtonColor: 'var(--danger)',
+            allowOutsideClick: false,
             customClass: { container: 'swal-top-layer', popup: 'premium-modal-radius' }
         });
     }
