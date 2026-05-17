@@ -144,32 +144,12 @@ document.head.appendChild(styleSheetUpdate);
 // ===============================================================
 // LÓGICA DE INICIALIZACIÓN
 // ===============================================================
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
     const ultimaVersion = historicoVersiones[0];
-    const badge = document.getElementById("version-badge");
-    
-    if (badge) {
-        const numEl = document.getElementById("badge-v-num");
-        const dateEl = document.getElementById("badge-v-date");
-        if (numEl) numEl.innerText = ultimaVersion.version;
-        if (dateEl) dateEl.innerText = `LANZAMIENTO: ${ultimaVersion.fecha}`;
-        document.body.appendChild(badge);
-        badge.style.display = 'none';
-
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const text = btn.innerText.toLowerCase();
-                if(text.includes('inicio') || text.includes('tienda')) {
-                    badge.style.display = 'flex';
-                } else {
-                    badge.style.display = 'none';
-                }
-            });
-        });
-        
-        // Mostrar si ya estamos dentro de una sección válida
-        const sidebar = document.querySelector('.sidebar');
-        if (sidebar && sidebar.style.display !== 'none') badge.style.display = 'flex';
-    }
+    const numEl = document.getElementById('badge-v-num');
+    const dateEl = document.getElementById('badge-v-date');
+    if (numEl) numEl.innerText = ultimaVersion.version;
+    if (dateEl) dateEl.innerText = `ÚLTIMA ACT. ${ultimaVersion.fecha}`;
+    // ⚠️ NO mover el badge al body — debe quedarse dentro de #sec-inicio
+    // para que se oculte automáticamente junto con esa sección.
 });
