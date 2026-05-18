@@ -4,6 +4,14 @@
 ================================================================================= */
 
 const historicoVersiones = [
+    {
+        version: "V.1.3.0",
+        fecha: "17/05/2026",
+        tipo: "Seguridad Avanzada",
+        cambios: [
+            "🔐 Seguridad reforzada: Tu sesión ahora cuenta con una capa mas de seguridad."
+        ]
+    },
    {
         version: "V.1.2.0",
         fecha: "24/04/2026",
