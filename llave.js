@@ -180,6 +180,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localStorage.setItem('dw_token', res.token);
                 localStorage.setItem('dw_user', res.usuario);
                 localStorage.setItem('dw_saldo', res.saldo || 0);
+                if (res.token_expires) localStorage.setItem('dw_token_expires', res.token_expires);
                 
                 userBalance = Number(res.saldo || 0);
                 
@@ -213,6 +214,10 @@ window.sincronizarSaldo = async function() {
         userBalance = Number(res.saldo);
         localStorage.setItem('dw_saldo', userBalance);
         updateBalanceUI();
+    } else if (res.msg === 'Sesión inválida') {
+        // 🔥 Token expirado o invalidado → cerrar sesión automáticamente
+        mostrarToast('Tu sesión ha expirado. Inicia sesión de nuevo.', 'warning');
+        setTimeout(() => logout(), 2000);
     }
 };
 
