@@ -142,10 +142,8 @@ async function procesarPagoBancolombia() {
     const finalAmount = customValue ? parseInt(customValue) : selectedAmount;
     if (!finalAmount || finalAmount <= 0) return Swal.fire({ title: 'Monto Requerido', icon: 'warning', background: 'var(--bg-card)', color: 'var(--text-white)' });
 
-    let bono = finalAmount >= 200000 ? finalAmount * 0.1 : (finalAmount >= 100000 ? finalAmount * 0.075 : (finalAmount >= 50000 ? finalAmount * 0.05 : 0));
-    const totalRecibir = finalAmount + bono;
-
-    let htmlBono = bono > 0 ? `<div style="color:#10b981; font-weight:800; font-size:12px; margin-top:5px;">🎁 BONO INCLUIDO: $ ${new Intl.NumberFormat('es-CO').format(bono)}</div>` : '';
+    let bonoPreview = finalAmount >= 200000 ? finalAmount * 0.1 : (finalAmount >= 100000 ? finalAmount * 0.075 : (finalAmount >= 50000 ? finalAmount * 0.05 : 0));
+    let htmlBono = bonoPreview > 0 ? `<div style="color:#10b981; font-weight:800; font-size:12px; margin-top:5px;">🎁 BONO ESTIMADO: +$ ${new Intl.NumberFormat('es-CO').format(bonoPreview)}</div>` : '';
 
     const hoy = new Date();
     const fechaLocal = hoy.getFullYear() + '-' + 
@@ -194,17 +192,18 @@ async function procesarPagoBancolombia() {
             if (ap === 'PM' && h24 !== 12) h24 += 12; else if (ap === 'AM' && h24 === 12) h24 = 0;
             const horaStr = h24.toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0');
             const fParts = fecha.split("-");
-            return { nombre: nombre.toUpperCase(), hora: horaStr, fecha: `${fParts[2]}/${fParts[1]}/${fParts[0].substring(2)}`, bono: bono };
+            return { nombre: nombre.toUpperCase(), hora: horaStr, fecha: `${fParts[2]}/${fParts[1]}/${fParts[0].substring(2)}` };
         }
     });
 
-    if (formValues) enviarAlServidorBancolombia(finalAmount, formValues.nombre, formValues.hora, formValues.fecha, formValues.bono);
+    if (formValues) enviarAlServidorBancolombia(finalAmount, formValues.nombre, formValues.hora, formValues.fecha);
 }
 
 /**
  * 🚀 FUNCIÓN CRÍTICA: VALIDA CON GOOGLE Y LUEGO GUARDA EN BD
+ * (El cálculo de bonos se delega 100% al backend en dw_api.php)
  */
-async function enviarAlServidorBancolombia(monto, nombreTitular, horaPago, fechaPago, bonoCalculado) {
+async function enviarAlServidorBancolombia(monto, nombreTitular, horaPago, fechaPago) {
     const user = localStorage.getItem('dw_user') || 'Cliente';
     const email = localStorage.getItem('dw_email') || 'Sin correo'; 
 
@@ -225,11 +224,12 @@ async function enviarAlServidorBancolombia(monto, nombreTitular, horaPago, fecha
     });
 
     try {
-        // 1. Notificar a Google
-        await fetch(GS_RECARGA, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ usuario: user, monto: monto, bono: bonoCalculado, email_usuario: email, hora_pago: horaPago, fecha_pago: fechaPago, nombre: nombreTitular }) });
+        // 1. Notificar a Google con el monto transferido
+        await fetch(GS_RECARGA, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ usuario: user, monto: monto, email_usuario: email, hora_pago: horaPago, fecha_pago: fechaPago, nombre: nombreTitular }) });
 
         let recargaExitosa = false;
-        let saldoActualizado = 0; // Variable para guardar el saldo seguro que responda Google
+        let saldoActualizado = 0; // Saldo oficial acreditado por el backend
+        let bonoAcreditado = 0;   // Bono oficial calculado por el backend
         
         // 2. Bucle de escaneo IA
         for (let i = 1; i <= 2; i++) {
@@ -241,7 +241,8 @@ async function enviarAlServidorBancolombia(monto, nombreTitular, horaPago, fecha
             
             if (data.estado === 'APROBADO') { 
                 recargaExitosa = true; 
-                saldoActualizado = data.nuevo_saldo; // Tomamos el saldo que el PHP le dio al GS
+                saldoActualizado = data.nuevo_saldo;
+                bonoAcreditado = data.bono || 0;
                 break; 
             } else if (data.estado === 'ERROR_DB') {
                 // Falla de comunicación entre Google y tu Base de datos
@@ -255,7 +256,7 @@ async function enviarAlServidorBancolombia(monto, nombreTitular, horaPago, fecha
         }
 
         if (recargaExitosa) {
-            // 🔥 ACTUALIZAR INTERFAZ DIRECTAMENTE (EL PHP YA FUE AVISADO POR GOOGLE) 🔥
+            // 🔥 ACTUALIZAR INTERFAZ DIRECTAMENTE (EL PHP YA CALCULÓ Y SUMÓ EL BONO) 🔥
             const statusText = document.getElementById('ia-status');
             if(statusText) statusText.innerText = `> ¡PAGO ENCONTRADO! ACTUALIZANDO INTERFAZ...`;
             
@@ -269,6 +270,10 @@ async function enviarAlServidorBancolombia(monto, nombreTitular, horaPago, fecha
                 window.updateBalanceUI();
             }
 
+            let htmlBonoBadge = bonoAcreditado > 0 
+                ? `<div style="color:#10b981; font-weight:800; font-size:12px; margin-top:6px;">🎁 BONO OFICIAL INCLUIDO: +$ ${new Intl.NumberFormat('es-CO').format(bonoAcreditado)}</div>` 
+                : '';
+
             Swal.fire({
                 html: `
                     <div class="banco-success-container" style="text-align: center; padding: 10px;">
@@ -280,9 +285,12 @@ async function enviarAlServidorBancolombia(monto, nombreTitular, horaPago, fecha
                         <h2 class="banco-title" style="margin-top:10px; color:var(--text-white); font-size:26px; font-weight:900; letter-spacing:-0.5px;">¡Recarga Exitosa!</h2>
                         <p style="color: var(--text-gray); font-size: 15px; margin-top: 15px; line-height: 1.5;">Tu transferencia ha sido validada y acreditada al instante.</p>
                         
-                        <div style="margin-top:25px; padding: 15px; border: 1px dashed rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05); border-radius: 12px; display:flex; align-items:center; justify-content:center; gap: 10px;">
-                            <span class="material-icons-round" style="color:#10b981; font-size: 18px;">account_balance_wallet</span>
-                            <p style="color: #10b981; font-size: 14px; font-weight: 800; margin: 0; letter-spacing: 0.5px; text-transform:uppercase;">NUEVO SALDO: $ ${nuevoSaldoFormat}</p>
+                        <div style="margin-top:25px; padding: 15px; border: 1px dashed rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05); border-radius: 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap: 4px;">
+                            <div style="display:flex; align-items:center; gap: 8px;">
+                                <span class="material-icons-round" style="color:#10b981; font-size: 18px;">account_balance_wallet</span>
+                                <p style="color: #10b981; font-size: 14px; font-weight: 800; margin: 0; letter-spacing: 0.5px; text-transform:uppercase;">NUEVO SALDO: $ ${nuevoSaldoFormat}</p>
+                            </div>
+                            ${htmlBonoBadge}
                         </div>
                     </div>
                 `,
