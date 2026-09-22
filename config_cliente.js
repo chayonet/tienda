@@ -22,7 +22,7 @@ const GS_OBREROS = [
 ];
 
 // 3. RECARGAS (Módulo de billetera y saldos)
-const GS_RECARGA = "https://script.google.com/macros/s/AKfycbysRqpQ2aG4HZ8o69e7MO32E7oYdWfO_EQ_gnSmO4lWIakfJR4m4U1OFywJcC1MLiN1/exec";
+const GS_RECARGA = "https://script.google.com/macros/s/AKfycbz7RWjT3JR285JAKbc06SHEnM-P1ExnKgZymdHLQ67VUMJRL40zmTABf9oSkxoE3U4I/exec";
 
 // 4. CÓDIGO / COMPRAS (Script para manejo de pines o compras de la tienda)
 const GS_CODIGO = "https://script.google.com/macros/s/AKfycbybqRTJ1V0ppx4274KGorb7B3DSu9KF37UvegewhbMRanjD09hVADnCap_m9BAyYbO3/exec";
