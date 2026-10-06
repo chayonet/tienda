@@ -12,6 +12,73 @@ const RECHARGE_OPTIONS = [
 
 let selectedAmount = null;
 
+// Escala oficial de bonos respaldada por el servidor (con fallback estándar idéntico)
+let escalaBonosServidor = [
+    { rango_min: 0, rango_max: 49999, porcentaje: 0, texto: '0%' },
+    { rango_min: 50000, rango_max: 99999, porcentaje: 5, texto: '+5%' },
+    { rango_min: 100000, rango_max: 199999, porcentaje: 7.5, texto: '+7.5%' },
+    { rango_min: 200000, rango_max: null, porcentaje: 10, texto: '+10%' }
+];
+
+function calcularBonoEstimado(monto) {
+    if (!monto || monto <= 0) return { porcentaje: 0, bono: 0 };
+    for (let i = escalaBonosServidor.length - 1; i >= 0; i--) {
+        const item = escalaBonosServidor[i];
+        const min = item.rango_min;
+        const max = item.rango_max === null ? Infinity : item.rango_max;
+        if (monto >= min && monto <= max) {
+            const pct = item.porcentaje;
+            const bono = Math.round(monto * (pct / 100));
+            return { porcentaje: pct, bono: bono };
+        }
+    }
+    return { porcentaje: 0, bono: 0 };
+}
+
+async function fetchEscalaBonos() {
+    try {
+        const res = await fetch(API_CLIENTE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accion: 'getEscalaBonos' })
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.escalas)) {
+            escalaBonosServidor = data.escalas;
+            actualizarTablaYTarjetasBonos();
+        }
+    } catch (e) {
+        console.warn("Escala de bonos servida desde cache:", e);
+    }
+}
+
+function actualizarTablaYTarjetasBonos() {
+    // 1. Actualizar badges en tarjetas según el backend
+    RECHARGE_OPTIONS.forEach(opt => {
+        const calc = calcularBonoEstimado(opt.monto);
+        opt.bonoStr = calc.porcentaje > 0 ? `+${calc.porcentaje}% BONO` : "";
+    });
+    renderizarOpcionesRecarga();
+
+    // 2. Actualizar tabla HTML si está presente
+    const tbody = document.getElementById('bonus-table-tbody');
+    if (tbody && escalaBonosServidor.length > 0) {
+        const numFmt = new Intl.NumberFormat('es-CO');
+        let htmlRows = '';
+        escalaBonosServidor.forEach(item => {
+            const rangoTxt = (item.rango_max === null || item.rango_max >= 9999999)
+                ? `$${numFmt.format(item.rango_min)} en adelante`
+                : `$${numFmt.format(item.rango_min)} - $${numFmt.format(item.rango_max)}`;
+            const pctTxt = item.porcentaje > 0 ? `+${item.porcentaje}%` : '0%';
+            const styleCell = item.porcentaje > 0
+                ? 'class="bonus-highlight" style="text-align: right;"'
+                : 'style="text-align: right; color: var(--text-gray);"';
+            htmlRows += `<tr><td>${rangoTxt}</td><td ${styleCell}>${pctTxt}</td></tr>`;
+        });
+        tbody.innerHTML = htmlRows;
+    }
+}
+
 const WSP_ICON_ID = "12_hw1hRhhGNGv1UY7CX-YJajITFtrY-S";
 const WSP_ICON_URL = `https://drive.google.com/thumbnail?id=${WSP_ICON_ID}&sz=w200`;
 
@@ -55,7 +122,7 @@ function cargarRecarga() {
                             <thead>
                                 <tr><th>RANGO DE RECARGA</th><th style="text-align: right;">BONO REGALO</th></tr>
                             </thead>
-                            <tbody>
+                            <tbody id="bonus-table-tbody">
                                 <tr><td>$0 - $49.999</td><td style="text-align: right; color: var(--text-gray);">0%</td></tr>
                                 <tr><td>$50.000 - $99.999</td><td class="bonus-highlight" style="text-align: right;">+5%</td></tr>
                                 <tr><td>$100.000 - $199.999</td><td class="bonus-highlight" style="text-align: right;">+7.5%</td></tr>
@@ -79,6 +146,7 @@ function cargarRecarga() {
         </div>
     `;
     renderizarOpcionesRecarga();
+    fetchEscalaBonos();
 }
 
 window.toggleBonusTable = function() {
@@ -142,8 +210,8 @@ async function procesarPagoBancolombia() {
     const finalAmount = customValue ? parseInt(customValue) : selectedAmount;
     if (!finalAmount || finalAmount <= 0) return Swal.fire({ title: 'Monto Requerido', icon: 'warning', background: 'var(--bg-card)', color: 'var(--text-white)' });
 
-    let bonoPreview = finalAmount >= 200000 ? finalAmount * 0.1 : (finalAmount >= 100000 ? finalAmount * 0.075 : (finalAmount >= 50000 ? finalAmount * 0.05 : 0));
-    let htmlBono = bonoPreview > 0 ? `<div style="color:#10b981; font-weight:800; font-size:12px; margin-top:5px;">🎁 BONO ESTIMADO: +$ ${new Intl.NumberFormat('es-CO').format(bonoPreview)}</div>` : '';
+    const calcBono = calcularBonoEstimado(finalAmount);
+    let htmlBono = calcBono.bono > 0 ? `<div style="color:#10b981; font-weight:800; font-size:12px; margin-top:5px;">🎁 BONO ESTIMADO: +$ ${new Intl.NumberFormat('es-CO').format(calcBono.bono)}</div>` : '';
 
     const hoy = new Date();
     const fechaLocal = hoy.getFullYear() + '-' + 
